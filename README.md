@@ -1,4 +1,4 @@
-# 🚀 Pravix Image Upscaler
+
 
 <p align="center">
   <img src="frontend/assets/logo.png" alt="Pravix Image Upscaler" width="160">
