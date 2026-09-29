@@ -1,0 +1,32 @@
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Build & Release Artifacts (Distribute these via GitHub Releases!)
+build/
+dist/
+*.spec
+*.lnk
+outputs/
+
+# Large Model weights (>100MB strictly rejected by GitHub push)
+backend/models/GFPGANv1.4.onnx
+# Note: GFPGANv1.4 will automatically download on demand from HuggingFace on first use
+
+# Large Binaries (>50MB)
+backend/bin/ffmpeg.exe
+
+# Temporary files & logs
+temp/
+_temp*
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini

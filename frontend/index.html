@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pravix Image Upscaler</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header / Window Titlebar -->
+    <header class="navbar">
+      <div class="brand">
+        <img src="assets/logo.png" class="brand-logo-img" alt="Pravix Logo">
+        <div class="brand-text">
+          <h1>Pravix <span class="brand-plus">Upscaler</span></h1>
+          <span class="badge-subtitle">Images & Animated GIFs</span>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="gpu-badge" id="gpuStatusBadge">
+          <span class="pulse-dot"></span>
+          <span id="gpuNameText">RTX 5070 • Vulkan Ready</span>
+        </div>
+        <button id="btnOpenFolder" class="btn-secondary btn-sm" title="Open Output Folder">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Open Outputs
+        </button>
+        <button id="btnDonate" class="btn-donate" title="Support project & developer via PayPal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          Donate
+        </button>
+      </div>
+    </header>
+
+    <!-- Main App Layout -->
+    <main class="main-layout">
+      <!-- Upscayl 5-Step Left Sidebar -->
+      <aside class="sidebar">
+        <!-- STEP 1: Select Image / GIF -->
+        <section class="step-card">
+          <div class="step-header">
+            <span class="step-badge">STEP 1</span>
+            <span class="step-title">Select Image or GIF</span>
+          </div>
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp, image/gif, image/bmp" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
+            <div class="dropzone-content" id="dropzoneEmpty">
+              <div class="upload-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </div>
+              <p class="dropzone-title">Click or Drop Image / GIF</p>
+              <span class="dropzone-subtitle">Supports PNG, JPG, WEBP & <b>GIF</b></span>
+            </div>
+            
+            <div class="dropzone-preview hidden" id="dropzonePreview">
+              <img id="thumbImg" src="" alt="Thumbnail" />
+              <div class="preview-meta">
+                <span class="preview-filename" id="previewFilename">image.png</span>
+                <span class="preview-tag" id="previewTag">STATIC IMAGE</span>
+                <span class="preview-dims" id="previewDims">1080 x 720</span>
+              </div>
+              <button class="btn-remove-file" id="btnRemoveFile" title="Clear file">&times;</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2: Select Upscaling Model -->
+        <section class="step-card">
+          <div class="step-header">
+            <span class="step-badge">STEP 2</span>
+            <span class="step-title">Select Model</span>
+          </div>
+          <div class="models-grid" id="modelsContainer">
+            <!-- Dynamically populated model cards -->
+          </div>
+        </section>
+
+        <!-- STEP 3: Scale Multiplier -->
+        <section class="step-card">
+          <div class="step-header">
+            <span class="step-badge">STEP 3</span>
+            <span class="step-title">Scale Factor</span>
+          </div>
+          <div class="scale-selector">
+            <button class="scale-btn active" data-scale="2">2x (Default)</button>
+            <button class="scale-btn" data-scale="3">3x</button>
+            <button class="scale-btn" data-scale="4">4x</button>
+          </div>
+          <div class="quality-boost-card">
+            <label class="toggle-switch">
+              <input type="checkbox" id="chkEnhanceQuality" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-text">
+              <span class="toggle-title">✨ Ultra-Clarity & Detail Boost</span>
+              <span class="toggle-desc">Lanczos anti-aliasing & micro-texture refinement</span>
+            </div>
+          </div>
+          
+          <div class="quality-boost-card face-restore-card">
+            <label class="toggle-switch">
+              <input type="checkbox" id="chkRestoreFaces">
+              <span class="toggle-slider"></span>
+            </label>
+            <div class="toggle-text">
+              <div class="toggle-title-row">
+                <span class="toggle-title">👤 AI Face Restoration (GFPGAN)</span>
+                <span class="badge-portrait">PORTRAIT</span>
+              </div>
+              <span class="toggle-desc">Detects faces and restores realistic eyes, skin, lips & eyelashes</span>
+            </div>
+          </div>
+          
+          <div class="face-fidelity-box hidden" id="faceFidelityBox">
+            <div class="slider-header">
+              <span class="slider-label">Face Likeness vs. Detail</span>
+              <span class="slider-value" id="faceFidelityVal">75%</span>
+            </div>
+            <input type="range" id="sliderFaceFidelity" class="range-slider" min="30" max="100" value="75" step="5">
+            <div class="slider-hints">
+              <span>More Original</span>
+              <span>Balanced</span>
+              <span>Max Detail</span>
+            </div>
+          </div>
+
+          <!-- Discord File Size Optimizer -->
+          <div class="quality-boost-card discord-opt-card">
+            <label class="toggle-switch">
+              <input type="checkbox" id="chkDiscordOpt">
+              <span class="toggle-slider toggle-discord"></span>
+            </label>
+            <div class="toggle-text">
+              <div class="toggle-title-row">
+                <span class="toggle-title">🎮 Discord File Size Optimizer</span>
+                <span class="badge-discord">DISCORD</span>
+              </div>
+              <span class="toggle-desc">Automatically guarantees output GIF or image fits under Discord limit</span>
+            </div>
+          </div>
+          
+          <div class="discord-budget-box hidden" id="discordBudgetBox">
+            <div class="budget-header">
+              <span class="budget-title">Target Discord Upload Limit:</span>
+            </div>
+            <div class="budget-pills">
+              <button type="button" class="budget-pill active" data-mb="10">PFP / Banner (&lt; 10 MB)</button>
+              <button type="button" class="budget-pill" data-mb="25">Nitro / Chat (&lt; 25 MB)</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 4: Set Output Folder -->
+        <section class="step-card">
+          <div class="step-header">
+            <span class="step-badge">STEP 4</span>
+            <span class="step-title">Set Output Folder</span>
+          </div>
+          <div class="folder-picker">
+            <input type="text" id="outputFolderPath" class="folder-input" readonly placeholder="Default: Desktop\Output">
+            <button id="btnBrowseFolder" class="btn-secondary btn-browse" title="Change Output Folder">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Browse
+            </button>
+          </div>
+        </section>
+
+        <!-- STEP 5: Format & Action -->
+        <section class="step-card">
+          <div class="step-header">
+            <span class="step-badge">STEP 5</span>
+            <span class="step-title">Output Format</span>
+          </div>
+          <div class="format-selector" id="formatSelector">
+            <button class="format-btn active" data-fmt="png">PNG</button>
+            <button class="format-btn" data-fmt="jpg">JPG</button>
+            <button class="format-btn" data-fmt="webp">WEBP</button>
+          </div>
+          <span class="format-hint" id="formatHint">Lossless crisp PNG</span>
+
+          <button id="btnUpscale" class="btn-primary btn-upscale" disabled>
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span id="btnUpscaleText">UPSCALE</span>
+          </button>
+        </section>
+      </aside>
+
+      <!-- Main Canvas / Viewport -->
+      <section class="viewer-panel">
+        <!-- Canvas Toolbar for Zoom & Navigation -->
+        <div class="canvas-toolbar hidden" id="canvasToolbar">
+          <div class="toolbar-left">
+            <div class="zoom-controls">
+              <button class="btn-tool" id="btnZoomIn" title="Zoom In (+)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="11" y1="8" x2="11" y2="14"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </button>
+              <span class="zoom-level" id="zoomLevelText">100%</span>
+              <button class="btn-tool" id="btnZoomOut" title="Zoom Out (-)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </button>
+              <button class="btn-tool" id="btnZoomFit" title="Fit to View">Fit</button>
+            </div>
+          </div>
+
+          <div class="toolbar-center">
+            <div class="stats-pills" id="resultStatsBar">
+              <span class="stat-pill" id="statBefore">128 x 128</span>
+              <span class="arrow-sep">➔</span>
+              <span class="stat-pill highlight" id="statAfter">512 x 512</span>
+              <span class="stat-pill time" id="statTime">⏱️ 1.1s</span>
+            </div>
+          </div>
+
+          <div class="toolbar-right">
+            <a id="btnDownload" class="btn-primary btn-sm" download>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Save Result
+            </a>
+          </div>
+        </div>
+
+        <!-- 1. Idle State -->
+        <div class="viewer-state idle-state" id="viewIdle">
+          <div class="idle-illustration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </div>
+          <h2>Ready to Upscale</h2>
+          <p>Drag and drop an image or animated GIF anywhere or select on the left.</p>
+          <div class="feature-bullets">
+            <div class="bullet">⚡ <b>NVIDIA RTX 5070 GPU</b> native Vulkan acceleration</div>
+            <div class="bullet">🎞️ <b>Animated GIF Upscaler</b> with frame delay & loop preservation</div>
+            <div class="bullet">✨ Real-ESRGAN, UltraSharp, Digital Art & Remacri models</div>
+          </div>
+        </div>
+
+        <!-- 2. Processing State -->
+        <div class="viewer-state processing-state hidden" id="viewProcessing">
+          <div class="progress-card">
+            <div class="spinner-ring"></div>
+            <h3 id="progressTitle">Upscaling with RTX 5070...</h3>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="progressBarFill" style="width: 5%"></div>
+            </div>
+            <span class="progress-pct" id="progressPctText">5%</span>
+            
+            <div class="console-box" id="consoleBox">
+              <div class="console-line">[System] Initializing GPU Acceleration via Vulkan...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Result State: Static Image Split Slider -->
+        <div class="viewer-state result-image-state hidden" id="viewResultImage">
+          <div class="comparison-container" id="comparisonContainer">
+            <div class="image-wrapper before-wrapper">
+              <img id="imgBefore" src="" alt="Original Image" />
+              <span class="image-label before-label">Original</span>
+            </div>
+            <div class="image-wrapper after-wrapper" id="afterWrapper">
+              <img id="imgAfter" src="" alt="Upscaled Image" />
+              <span class="image-label after-label">Upscaled</span>
+            </div>
+            <div class="slider-handle" id="sliderHandle">
+              <div class="handle-line"></div>
+              <div class="handle-button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                  <polyline points="9 18 3 12 9 6"></polyline>
+                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                  <polyline points="15 18 21 12 15 6"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <p class="slider-tip">💡 Drag the center slider left and right to compare details.</p>
+        </div>
+
+        <!-- 4. Result State: Animated GIF Synchronized Player -->
+        <div class="viewer-state result-gif-state hidden" id="viewResultGif">
+          <div class="gif-sync-player">
+            <div class="gif-box">
+              <div class="gif-box-header">
+                <span>Original GIF</span>
+                <span class="badge-dim" id="gifOrigDim">200 x 200</span>
+              </div>
+              <div class="gif-media-container">
+                <img id="gifBefore" src="" alt="Original Animated GIF" />
+              </div>
+            </div>
+
+            <div class="gif-box highlight-box">
+              <div class="gif-box-header">
+                <span>Upscaled Animation</span>
+                <span class="badge-dim highlight" id="gifUpscaledDim">800 x 800</span>
+              </div>
+              <div class="gif-media-container">
+                <img id="gifAfter" src="" alt="Upscaled Animated GIF" />
+              </div>
+            </div>
+          </div>
+          
+          <div class="gif-controls-bar">
+            <button id="btnSyncReplay" class="btn-secondary btn-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              Sync & Replay
+            </button>
+            <span class="sync-hint">Both animations loop simultaneously in frame lockstep.</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
